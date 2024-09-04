@@ -44,7 +44,7 @@ const requestSort = (key) => {
   if (sortConfig.key === key && sortConfig.direction === 'ascending') {
     direction = 'descending'
   }
-  setSortConfig({ key, direction }):
+  setSortConfig({ key, direction });
 };
 
   return (
