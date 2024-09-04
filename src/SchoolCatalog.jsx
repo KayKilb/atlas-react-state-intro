@@ -3,52 +3,56 @@ import React, { useState, useEffect } from "react";
 export default function SchoolCatalog() {
   const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState({
-    key: null,
-    direction: "ascending",
-  });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
+    // Fetch data from the API
     fetch("/api/courses.json")
       .then((response) => response.json())
-      .then((data) => setCourses(data))
-      .catch((error) => console.error("Error fetching data:", error));
+      .then((data) => setCourses(data));
   }, []);
 
-  const handleSearchChange = (event) => {
+  const handleSearch = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
+    setCurrentPage(1); // Reset to the first page on new search
   };
 
-  const filteredCourses = courses.filter(
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedCourses = [...courses].sort((a, b) => {
+    if (sortConfig.key) {
+      let comparison = 0;
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        comparison = 1;
+      } else if (a[sortConfig.key] < b[sortConfig.key]) {
+        comparison = -1;
+      }
+      return sortConfig.direction === "asc" ? comparison : -comparison;
+    }
+    return 0;
+  });
+
+  const filteredCourses = sortedCourses.filter(
     (course) =>
       course.courseNumber.toLowerCase().includes(searchTerm) ||
       course.courseName.toLowerCase().includes(searchTerm)
   );
 
-  const sortedCourses = [...filteredCourses].sort((a, b) => {
-    if (sortConfig.key === null) return 0;
-    let aValue = a[sortConfig.key];
-    let bValue = b[sortConfig.key];
-
-    if (typeof aValue === "string") aValue = aValue.toLowerCase();
-    if (typeof bValue === "string") bValue = bValue.toLowerCase();
-
-    if (aValue < bValue) {
-      return sortConfig.direction === "ascending" ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortConfig.direction === "ascending" ? 1 : -1;
-    }
-    return 0;
-  });
-
-  const requestSort = (key) => {
-    let direction = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    }
-    setSortConfig({ key, direction });
-  };
+  const totalItems = filteredCourses.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentCourses = filteredCourses.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   return (
     <div className="school-catalog">
@@ -56,26 +60,26 @@ export default function SchoolCatalog() {
       <input
         type="text"
         placeholder="Search"
+        onChange={handleSearch}
         value={searchTerm}
-        onChange={handleSearchChange}
       />
       <table>
         <thead>
           <tr>
-            <th onClick={() => requestSort("trimester")}>Trimester</th>
-            <th onClick={() => requestSort("courseNumber")}>Course Number</th>
-            <th onClick={() => requestSort("courseName")}>Courses Name</th>
-            <th onClick={() => requestSort("semesterCredits")}>
+            <th onClick={() => handleSort("trimester")}>Trimester</th>
+            <th onClick={() => handleSort("courseNumber")}>Course Number</th>
+            <th onClick={() => handleSort("courseName")}>Courses Name</th>
+            <th onClick={() => handleSort("semesterCredits")}>
               Semester Credits
             </th>
-            <th onClick={() => requestSort("totalClockHours")}>
+            <th onClick={() => handleSort("totalClockHours")}>
               Total Clock Hours
             </th>
             <th>Enroll</th>
           </tr>
         </thead>
         <tbody>
-          {sortedCourses.map((course, index) => (
+          {currentCourses.map((course, index) => (
             <tr key={index}>
               <td>{course.trimester}</td>
               <td>{course.courseNumber}</td>
@@ -90,8 +94,18 @@ export default function SchoolCatalog() {
         </tbody>
       </table>
       <div className="pagination">
-        <button>Previous</button>
-        <button>Next</button>
+        <button
+          onClick={() => setCurrentPage((prev) => prev - 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        <button
+          onClick={() => setCurrentPage((prev) => prev + 1)}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
       </div>
     </div>
   );
