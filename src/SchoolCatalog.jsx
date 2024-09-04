@@ -1,4 +1,4 @@
-import React, { useEffect, use State } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function SchoolCatalog() {
   const [courses, setCourses] = useState([]);
@@ -7,7 +7,7 @@ export default function SchoolCatalog() {
     fetch("/api/courses.json")
       .then((response) => response.json())
       .then((data) => setCourses(data))
-      .catch((error) => console.error("Error fetching courses:",error));
+      .catch((error) => console.error("Error fetching courses:", error));
   }, []);
 
   return (
