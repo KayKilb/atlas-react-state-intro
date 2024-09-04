@@ -1,4 +1,15 @@
+import React, { useEffect, use State } from "react";
+
 export default function SchoolCatalog() {
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/courses.json")
+      .then((response) => response.json())
+      .then((data) => setCourses(data))
+      .catch((error) => console.error("Error fetching courses:",error));
+  }, []);
+
   return (
     <div className="school-catalog">
       <h1>School Catalog</h1>
