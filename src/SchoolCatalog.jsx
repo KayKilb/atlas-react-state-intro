@@ -45,7 +45,7 @@ const requestSort = (key) => {
     direction = 'descending'
   }
   setSortConfig({ key, direction }):
-}:
+};
 
   return (
     <div className="school-catalog">
